@@ -1,10 +1,9 @@
 #!/bin/bash
 
 ### allowed AP ###
-APSlist=( "jerg_hack"  "drakula" "test" "iwselect" )
+APSlist=( "jerg_hack"  "drakula5"  )
 
 
-visible=( `ls -1` )
 
 
 ###########################################
@@ -14,9 +13,9 @@ visible=( `ls -1` )
 ###########################################
 
 function rekillwpa(){
-    echo ! ... seeing jerg_hack ... killing
-    sudo pkill wpa_supplicant
-    echo W ... connecting to jerg_hack
+    echo ! ... ... killing current AP for new ${1}
+    #sudo pkill wpa_supplicant
+    echo W ... connecting to  ${1}
     # sudo wpa_supplicant -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/wpa_jerg.conf >/dev/null &
     echo searching for /etc/wpa_supplicant/wpa_${1}
     sleep 1  
@@ -29,9 +28,15 @@ function who_am_i(){
     echo "$ME"
 }
 
+
 function prefferedAP(){
 o=0
 brk=0
+
+visible=( `sudo iwlist wlan0 scan | grep  ESSID` )
+
+echo "i... ${#visible[*]} ... APs detected" 1>&2
+
 for vi in "${visible[@]}"; do
     o=$(( $o + 1 ))
     echo $o AP=$vi  1>&2
@@ -42,14 +47,14 @@ for vi in "${visible[@]}"; do
 	####################### I HAVE DETECTED A LISTED AP /BEGIN
 	if [ "$?" = "0" ]; then
 	    echo "... ------" $li is visible AP!  1>&2
-	    echo ... $li
+	    echo "$li"   #### THIS IS OUTPUT !!!
 	    brk=1
 	    break
 	fi
 	####################### I HAVE DETECTED A LISTED AP /END
     done
     if [ "$brk" = "1" ]; then
-	echo ... ... breaking 2  1>&2
+	echo "... ... breaking 2"  1>&2
 	break
     fi
 done
@@ -58,9 +63,24 @@ done
 
 
 ################################## MAIN #############
+for ((i=0;i<2;i++)); do 
+clear
+
 iam="$( who_am_i )"
+echo "i... I am on $iam"
 newAP="$( prefferedAP )"
-echo "new AP is /$newAP/"
+echo "suggested AP is /${newAP}/"
 if [ "$newAP" != "" ]; then
-    rekillwpa ${newAP} 
+	if [ "$iam" != "$newAP" ]; then
+		echo !... going for a new AP ${newAP}
+		rekillwpa ${newAP} 
+	else
+		echo i ... already on ${newAP} ... no action
+	fi
+else
+	echo staying like $iam
 fi
+
+sleep 1
+### main for
+done
