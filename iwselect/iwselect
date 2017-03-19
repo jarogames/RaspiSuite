@@ -1,43 +1,86 @@
 #!/bin/bash
 
-APS=["jerg_hack"]
+### allowed AP ###
+APSlist=( "jerg_hack"  "drakula5"  )
 
 
 
-for  (( i=0;i<999999999; i++)); do
 
-    echo $i '.=========================================================='
+###########################################
+#
+#   rekillwpa - ACTION IS HERE
+#
+###########################################
+
+function rekillwpa(){
+    echo ! ... ... killing current AP for new ${1}
+    sudo pkill wpa_supplicant
+    echo W ... connecting to  ${1}
+    sudo wpa_supplicant -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/wpa_jerg.conf >/dev/null &
+    echo searching for /etc/wpa_supplicant/wpa_${1}
+    sleep 1  
+}
+
+
+
+function who_am_i(){
     ME=`iwconfig wlan0 | grep ESSID | awk -F\" '{print $2}' `
-    echo i ... I am now connected to  $ME
+    echo "$ME"
+}
 
-    
-    A=`sudo iwlist wlan0 scan | grep  ESSID `
-    # echo "$A"
-    echo "$A" | grep jerg_hack >/dev/null
 
-    
-    if [ "$?" = "0" ]; then
-	if [ "$ME" != "jerg_hack" ]; then
-	    echo ! ... seeing jerg_hack ... killing
-	    sudo pkill wpa_supplicant
-	    echo W ... connecting to jerg_hack
-	    sudo wpa_supplicant -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/wpa_jerg.conf >/dev/null &
-	    sleep 1
-	else
-	    echo i ... already in jerg_hack
-	    sleep 1
+function prefferedAP(){
+o=0
+brk=0
+
+visible=( `sudo iwlist wlan0 scan | grep  ESSID` )
+
+echo "i... ${#visible[*]} ... APs detected" 1>&2
+
+for vi in "${visible[@]}"; do
+    o=$(( $o + 1 ))
+    echo $o AP=$vi  1>&2
+    ### Now test my AP list
+    for li in  "${APSlist[@]}"; do
+	echo "...    " testing $vi for allowed $li 1>&2
+	echo "..." $vi | grep -e "$li" >/dev/null
+	####################### I HAVE DETECTED A LISTED AP /BEGIN
+	if [ "$?" = "0" ]; then
+	    echo "... ------" $li is visible AP!  1>&2
+	    echo "$li"   #### THIS IS OUTPUT !!!
+	    brk=1
+	    break
 	fi
-    else
-	if [ "$ME" = "" ]; then
-	    echo ! ... NO jerg_hack  seen........no AP..... connecting to STD
-	    sudo pkill wpa_supplicant
-	    sudo wpa_supplicant -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf >/dev/null &
-	    sleep 1
-	else
-	    echo i ... NO jerg_hack seen .... and $ME is connected
-	fi
+	####################### I HAVE DETECTED A LISTED AP /END
+    done
+    if [ "$brk" = "1" ]; then
+	echo "... ... breaking 2"  1>&2
+	break
     fi
-    sleep 3
-    
 done
+}
 
+
+
+################################## MAIN #############
+for ((i=0;i<1;i++)); do 
+clear
+
+iam="$( who_am_i )"
+echo "i... I am on $iam"
+newAP="$( prefferedAP )"
+echo "suggested AP is /${newAP}/"
+if [ "$newAP" != "" ]; then
+	if [ "$iam" != "$newAP" ]; then
+		echo !... going for a new AP ${newAP}
+		rekillwpa ${newAP} 
+	else
+		echo i ... already on ${newAP} ... no action
+	fi
+else
+	echo staying like $iam
+fi
+
+sleep 1
+### main for
+done
