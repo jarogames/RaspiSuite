@@ -14,9 +14,9 @@ APSlist=( "jerg_hack"  "drakula5"  )
 
 function rekillwpa(){
     echo ! ... ... killing current AP for new ${1}
-    sudo pkill wpa_supplicant
+    #sudo pkill wpa_supplicant
     echo W ... connecting to  ${1}
-    sudo wpa_supplicant -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/wpa_jerg.conf >/dev/null &
+    #sudo wpa_supplicant -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/wpa_jerg.conf >/dev/null &
     echo searching for /etc/wpa_supplicant/wpa_${1}
     sleep 1  
 }
@@ -30,19 +30,21 @@ function who_am_i(){
 
 
 function prefferedAP(){
-o=0
 brk=0
 
 visible=( `sudo iwlist wlan0 scan | grep  ESSID` )
 
 echo "i... ${#visible[*]} ... APs detected" 1>&2
 
-for vi in "${visible[@]}"; do
-    o=$(( $o + 1 ))
-    echo $o AP=$vi  1>&2
-    ### Now test my AP list
-    for li in  "${APSlist[@]}"; do
-	echo "...    " testing $vi for allowed $li 1>&2
+
+### Now test my AP list
+for li in  "${APSlist[@]}"; do
+    echo "...    " Taking from LIST  /$li/ 1>&2
+    o=0
+    for vi in "${visible[@]}"; do
+	o=$(( $o + 1 ))
+	echo "...    " comparing if $vi is on the list:  $li 1>&2
+	echo $o AP=$vi  1>&2
 	echo "..." $vi | grep -e "$li" >/dev/null
 	####################### I HAVE DETECTED A LISTED AP /BEGIN
 	if [ "$?" = "0" ]; then
@@ -59,6 +61,9 @@ for vi in "${visible[@]}"; do
     fi
 done
 }
+
+
+
 
 
 
