@@ -1,0 +1,151 @@
+#!/usr/bin/python
+import RPi.GPIO as GPIO
+import time
+from subprocess import call
+import os,sys
+#####################3NEW PP PART -  i installed pip-python and pp
+import pp
+########
+from pathos.pp import ParallelPythonPool
+
+
+STOPME=1  # if ==1: means STOP ME
+## set up GPIO using BCM numbering - this is better
+GPIO.setmode(GPIO.BCM)
+## setup GPIO using Board numbering
+## GPIO.setmode(GPIO.BOARD)
+GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+## pud up = connect with ground
+GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#######
+#  1/cwd
+#  2/define hook function  and HOOK IT
+#  3/create an infinite loop sleep 
+#
+os.chdir('/home/pi/.myservice')
+MOTION="/motion"
+print(os.getcwd())
+def chk_stop():
+#	try:
+	with open('/home/pi/.resetCAM','r') as f:
+		a=f.read().rstrip()
+		f.close()
+		print("readout resetCAM FLAG==",a)
+		if a=="1": 
+			return True
+		else:
+			return False
+#	except:
+	print("No file  .resetCAM")
+	return False
+### this is a flag for other process
+def set_stop(status):
+	with  open('/home/pi/.resetCAM','w') as f:
+		print("writing to resetCAM, FLAG=", status)
+        	f.write(str(status)+"\n")
+		f.close()
+def setresol(res, letter='A',sleep=5):
+	global MOTION
+	#### change resolution 
+	fo=open('/home/pi/.camson.rpires','w')
+	print("writing to .camson.pires=",res)
+	fo.write( str(res)+"/n")
+	fo.close()
+	print("x... killing picam screen - it autorestarts in 20 sec.")
+	os.system("su - pi -c \" screen -X -S picam quit\" ")
+
+
+# this should be the new thread
+#
+#
+def start_wget_loop( letter, sleep ):
+	MOTION="/motion"
+	#global MOTION # not if in thread
+	tistr=time.strftime("%Y%m%d_%H%M%S")
+	# i create directory 
+	newpath = MOTION+"/cam_"+letter+"/"+tistr+"."+letter
+	#### command 8088 for A 8080 for B
+	CMD="wget --quiet -T 1  http://localhost:"
+	if letter=='A':CMD=CMD+"8088"
+	if letter=='B':CMD=CMD+"8080"
+	CMD=CMD+"/?action=snapshot -O "+newpath
+	if not os.path.exists(newpath):
+		os.makedirs(newpath)
+		print("i... we created directory", newpath)
+		print("now...RUN ",CMD)
+	for i in range(5):
+		for j in range(sleep):
+			if chk_stop(): return
+			time.sleep(1)
+			print(".")
+		tistr=time.strftime("%Y%m%d_%H%M%S_%a")
+		CMD2=CMD+"/"+tistr+".jpg"
+		print(i,sleep,'s. ...',CMD2)
+		os.system( CMD2 )
+######################################
+#ppservers=()
+#job_server = pp.Server(2,ppservers=ppservers)
+
+def br_ofof():
+	print("X... once per hour one picture")
+	set_stop(1)
+	setresol(1296)
+	time.sleep(5)
+	set_stop(0)
+#	j=job_server.submit( start_wget_loop, ('A',5), (chk_stop,), ("time",)) 
+#	print(j()) #wait here until it quits by itself
+	start_wget_loop('A',5 )
+	return
+def br_onof():
+	print("X... once per minute one picture")
+	set_stop(1)
+	setresol(1296)
+	time.sleep(5)
+	set_stop(0)
+#	setresol(1296)
+#	j=job_server.submit( start_wget_loop, ('A',4), (chk_stop,), ("time",)) 
+#	print(j()) #wait here until it quits by itself
+	start_wget_loop( 'A',4 )
+	return
+def br_ofon():
+	print("X... once per second one picture")
+	set_stop(1)
+#	setresol(1296)
+	setresol(640)
+	time.sleep(5)
+	set_stop(0)
+#	setresol(1296)
+	start_wget_loop( 'A', 3 )
+	return
+def br_onon():
+	print("X... i dont know - maybe as fast as possible")
+	set_stop(1)
+#	setresol(1296)
+	setresol(640)
+	time.sleep(5)
+	set_stop(0)
+#	setresol(1296)
+	start_wget_loop( 'A', 2 )
+	return
+############################################reveresed 0==1
+def hooked(chan):
+	time.sleep(0.2)
+	print("i... enterer hook",chan,GPIO.input(23),GPIO.input(24))
+        if( (GPIO.input(23) == 0)and(GPIO.input(24) == 0) ):
+		br_onon()
+        if( (GPIO.input(23) == 1)and(GPIO.input(24) == 0) ):
+		br_ofon()
+        if( (GPIO.input(23) == 0)and(GPIO.input(24) == 1) ):
+		br_onof()
+        if( (GPIO.input(23) == 1)and(GPIO.input(24) == 1) ):
+		br_ofof()
+	time.sleep(1)
+	print("i... exits hook",chan,' 23:24',GPIO.input(23),':',GPIO.input(24))
+	return
+hooked(0)
+GPIO.add_event_detect(23, GPIO.RISING, callback=hooked, bouncetime=300)
+GPIO.add_event_detect(24, GPIO.RISING, callback=hooked, bouncetime=300)
+while True:
+        time.sleep(1)
+GPIO.cleanup()
+

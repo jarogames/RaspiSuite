@@ -1,0 +1,126 @@
+#!/usr/bin/perl
+
+$pi = atan2(1,1) * 4;
+
+sub distance {
+    my ($lat1, $lon1, $lat2, $lon2, $unit) = @_;
+    my $theta = $lon1 - $lon2;
+    my $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+  $dist  = acos($dist);
+  $dist = rad2deg($dist);
+  $dist = $dist * 60 * 1.1515;
+  if ($unit eq "K") {
+    $dist = $dist * 1.609344;
+  } elsif ($unit eq "N") {
+    $dist = $dist * 0.8684;
+  } elsif ($unit eq "m") {
+    $dist = int( 10* $dist * 0.8684*1000 )/10 ;
+        }
+    return ($dist);
+}
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#:::  This function get the arccos function using arctan function   :::
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+sub acos {
+    my ($rad) = @_;
+    my $ret = atan2(sqrt(1 - $rad**2), $rad);
+    return $ret;
+}
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#:::  This function converts decimal degrees to radians             :::
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+sub deg2rad {
+    my ($deg) = @_;
+    return ($deg * $pi / 180);
+}
+ 
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#:::  This function converts radians to decimal degrees             :::
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+sub rad2deg {
+    my ($rad) = @_;
+    return ($rad * 180 / $pi);
+}
+
+    `rm  /tmp/gps_actual`;
+
+print STDERR "+ ... loading csv ...";
+open IN,"souradnice2.csv";
+while (<IN>){  push @sou, $_; }
+close IN;
+print STDERR " csv loaded\n";
+
+$act="nowhere";
+$min=98765;
+$lat=49.86419;
+$lon=14.23974;
+$lat=0.;
+$lon=0.;
+$| = 1;
+
+while (1==1){
+###    print STDERR "o";
+    $GPSDOUTPUT="/tmp/gpsd.return";
+    `rm $GPSDOUTPUT  2>/dev/null`;
+
+
+### timeout ....
+    print STDERR "+ ... starting gpspipe ...";
+    $GPSD=`timeout 5s gpspipe -w -n 6 | grep TPV`;
+    $errcode=$?;
+    print STDERR " ending gpspipe with errorcode $errcode\n";
+
+##    print "error code $?\n";
+if ( $errcode==0){
+    ($lat)=( $GPSD=~/"lat"\:([\d\.]+)/  );
+    ($lon)=( $GPSD=~/"lon"\:([\d\.]+)/  );
+    ($time)=( $GPSD=~/"time"\:"(.+?)"/  );
+
+    #print "   $lat  $lon $time\n";
+    $lastlat=`cat /tmp/gps.lat.last`;
+    $lastlon=`cat /tmp/gps.lon.last`;
+    chop($lastlat);
+    chop($lastlon);
+    #$lat=49.86419;
+    #$lon=14.23974;
+
+    print STDERR "+ ... parsing database ";
+    print ".";
+    $NSWE="";
+    for ($i=0;$i<=$#sou;$i++){
+	## print ".";flush;##    print "$sou[$i]\n";
+	    @ll=split/,/,$sou[$i];
+	    $d=distance($ll[1],$ll[2], $lat,$lon, "K" );
+	    if ($d<$min){ 
+		$min=int(10*$d)/10; $act=$ll[0]; 
+		$act=~s/"//g;
+		print STDOUT ".";
+                if ($ll[1]-$lat>0){ $NSWE="S";}else{$NSWE="N";}
+                if ($ll[2]-$lon>0){ $NSWE.="W";}else{$NSWE.="E";}
+	#	print "$act $min\n";
+	    }
+    } # for search
+    print STDERR "+ ... database parsed\n";
+
+
+    print "$act  $NSWE $min\n";
+
+    `echo "$act  $NSWE $min" > /tmp/gps_actual`;
+
+    } #errorcode 0
+else{
+   print "! ... no lock\n";
+   ` echo "no lock" > /tmp/gps_actual`;
+}
+
+    $min=98765;
+
+    `echo $lat >/tmp/gps.lat.last`;
+    `echo $lon >/tmp/gps.lon.last`;
+    `echo $time >/tmp/gps.time.last`;
+    $sleeptime=10;
+    print STDERR "+ ... sleeping $sleeptime\n";
+    sleep  $sleeptime;
+
+} # while 1==1
+
