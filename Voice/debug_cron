@@ -1,0 +1,5 @@
+tail /var/log/syslog
+
+env -i /bin/bash --noprofile --norc
+
+
