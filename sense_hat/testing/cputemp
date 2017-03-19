@@ -1,0 +1,28 @@
+#!/bin/bash
+cpuTemp0=$(cat /sys/class/thermal/thermal_zone0/temp)
+cpuTemp1=$(($cpuTemp0/1000))
+cpuTemp2=$(($cpuTemp0/100))
+cpuTempM=$(($cpuTemp2 % $cpuTemp1))
+
+echo CPU $cpuTemp1"."$cpuTempM
+#echo GPU $(/opt/vc/bin/vcgencmd measure_temp)
+
+GPU=`/opt/vc/bin/vcgencmd measure_temp  |awk -F= '{print $2}' | awk -F\' '{print $1}'`
+echo GPU $GPU
+
+
+exit
+#!/bin/python
+#script to read a file and extract a number
+
+fo = open("sysTemp") # Open a file
+str = fo.read(); #read characters in sysTemp and hold them as 'str'
+fo.close() #close opened file
+print(str) # print string to check
+temp1=str[5:9] #chop out required characters
+temp2=eval(temp1) #convert string into number
+print("system temp = ", temp2) # print value to check
+temp=temp2*2 # multiply by 2 to check for mathematical useability
+print("twice system temp = ",temp) # print multiplied number
+
+temp_calibrated = temp - ((cpu_temp - temp)/5.466)
