@@ -1,0 +1,26 @@
+# For example, you can run a backup of all your user accounts at 5 a.m every 
+# week with: 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+# 
+# For more information see the manual pages of crontab(5) and cron(8)
+# 
+# m h  dom mon dow   command
+#29 6 * * 1-5   /usr/bin/amixer cset numid=1
+30 6 * * 1-5  /usr/bin/mpg321 /home/pi/nctrig_clock/06_30.mp3
+32 6 * * 1-5  /usr/bin/mpg321 /home/pi/nctrig_clock/06_32.mp3
+34 6 * * 1-5  /usr/bin/mpg321 /home/pi/nctrig_clock/06_34.mp3
+36 6 * * 1-5  /usr/bin/mpg321 /home/pi/nctrig_clock/06_36.mp3
+38 6 * * 1-5  /usr/bin/mpg321 /home/pi/nctrig_clock/06_38.mp3
+40 6 * * 1-5  /usr/bin/mpg321 /home/pi/nctrig_clock/06_40.mp3
+50 6 * * 1-5  /usr/bin/mpg321 /home/pi/nctrig_clock/06_50.mp3
+00 7 * * 1-5  /usr/bin/mpg321 /home/pi/nctrig_clock/07_00.mp3
+30 7 * * *  /usr/bin/mpg321 /home/pi/nctrig_clock/07_30.mp3
+00 8 * * *  /usr/bin/mpg321 /home/pi/nctrig_clock/08_00.mp3
+20 8 * * 0  /usr/bin/mpg321 /home/pi/nctrig_clock/08_20.mp3
+30 8 * * *  /usr/bin/mpg321 /home/pi/nctrig_clock/08_30.mp3
+00 9 * * *  /usr/bin/mpg321 /home/pi/nctrig_clock/09_00.mp3
+#59 18 * * *  /usr/bin/amixer cset numid=1
+00 18 * * * /usr/bin/mpg321 /home/pi/nctrig_clock/18_00.mp3
+00 19 * * * /usr/bin/mpg321 /home/pi/nctrig_clock/19_00.mp3
+00 20 * * * /usr/bin/mpg321 /home/pi/nctrig_clock/20_00.mp3
+00 21 * * * /usr/bin/mpg321 /home/pi/nctrig_clock/21_00.mp3
+

@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+# change  /etc/rsyslog.conf  *.* @192.168.0.117:514
+#
+#
+#
+logger "pi sound ok "`date +%s`"     "`date`
+sleep 120
+

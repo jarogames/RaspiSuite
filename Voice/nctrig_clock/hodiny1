@@ -1,0 +1,37 @@
+#!/bin/bash
+
+H1=hodina
+H2=hodiny
+H3=hodin
+
+M1=minuta
+M2=minuty
+M3=minut
+
+for (( i=0; i<24; i++ )); do
+   if [ "$i" = "0" ]; then  gspeak3.pl "$i $H3"; fi
+   if [ "$i" = "1" ]; then  gspeak3.pl "$i $H1"; fi
+   if [ "$i" = "2" ]; then  gspeak3.pl "$i $H2"; fi
+   if [ "$i" = "3" ]; then  gspeak3.pl "$i $H2"; fi
+   if [ "$i" = "4" ]; then  gspeak3.pl "$i $H2"; fi
+   if [ "$i" -gt "4" ]; then  gspeak3.pl "$i $H3"; fi
+   mv masnun.wav  ${i}_hod.wav
+   lame  ${i}_hod.wav
+   sleep 10
+done
+
+
+
+for (( i=0; i<60; i++ )); do
+   if [ "$i" = "0" ]; then  gspeak3.pl "$i $M3"; fi
+   if [ "$i" = "1" ]; then  gspeak3.pl "$i $M1"; fi
+   if [ "$i" = "2" ]; then  gspeak3.pl "$i $M2"; fi
+   if [ "$i" = "3" ]; then  gspeak3.pl "$i $M2"; fi
+   if [ "$i" = "4" ]; then  gspeak3.pl "$i $M2"; fi
+   if [ "$i" -gt "4" ]; then  gspeak3.pl "$i $M3"; fi
+
+ 
+   mv masnun.wav  ${i}_minut.wav
+   lame  ${i}_minut.wav
+  sleep 10
+done

@@ -1,0 +1,3 @@
+[submodule "CAMSON"]
+	path = CAMSON
+	url = http://github.com/jarogames/CAMSON

@@ -1,0 +1,43 @@
+#!/bin/bash
+
+APS=["jerg_hack"]
+
+
+
+for  (( i=0;i<999999999; i++)); do
+
+    echo $i '.=========================================================='
+    ME=`iwconfig wlan0 | grep ESSID | awk -F\" '{print $2}' `
+    echo i ... I am now connected to  $ME
+
+    
+    A=`sudo iwlist wlan0 scan | grep  ESSID `
+    # echo "$A"
+    echo "$A" | grep jerg_hack >/dev/null
+
+    
+    if [ "$?" = "0" ]; then
+	if [ "$ME" != "jerg_hack" ]; then
+	    echo ! ... seeing jerg_hack ... killing
+	    sudo pkill wpa_supplicant
+	    echo W ... connecting to jerg_hack
+	    sudo wpa_supplicant -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/wpa_jerg.conf >/dev/null &
+	    sleep 1
+	else
+	    echo i ... already in jerg_hack
+	    sleep 1
+	fi
+    else
+	if [ "$ME" = "" ]; then
+	    echo ! ... NO jerg_hack  seen........no AP..... connecting to STD
+	    sudo pkill wpa_supplicant
+	    sudo wpa_supplicant -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf >/dev/null &
+	    sleep 1
+	else
+	    echo i ... NO jerg_hack seen .... and $ME is connected
+	fi
+    fi
+    sleep 3
+    
+done
+

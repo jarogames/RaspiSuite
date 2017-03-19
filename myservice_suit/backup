@@ -1,0 +1,79 @@
+#!/bin/bash
+
+D=`date +%Y%m%d_%H%M%S`
+
+ARR=( /etc/rc.local  $HOME/nctrig\*    )
+
+#echo arr # ${ARR[*]}       #sleep 1
+
+NOTAR=( --exclude=ir.sqlite\*     --exclude=.ir.sqlite\* --exclude=\*.tgz --exclude=\*LINES_NOW  --exclude=\*LINES   --exclude=\*.log)
+
+#echo notar #${NOTAR[*]}    #sleep 1
+
+sec=`date +%H%M%S`
+sse=`expr $sec + 0`
+delta=5
+echo seconds $sec $sse $delta ...
+#######################launch the backup EVERY DAY ON: 
+if [ "$1" = "" ]; then
+ AIM=175000
+else
+ AIM=$1
+fi
+echo aim $AIM  
+AIM2=`expr $AIM + $delta` 
+echo aim $AIM  $AIM2
+
+
+
+
+
+DESTINATION=$HOME
+mkdir -p $DESTINATION
+BASENAME="backup_${HOSTNAME}_"
+
+echo now= $D dest= $DESTINATION
+sleep 1
+
+
+
+echo FULL BACKUP 
+     OUTNAME=$DESTINATION/${BASENAME}`date +%Y%m%d_%H%M%S`.tgz
+echo typical:  tar -cvzf $OUTNAME ${NOTAR[*]}  ${ARR[*]} 
+echo FULL BACKUP no it is  $sse and i wait until  $AIM
+
+while [ 1 ]; do
+        if [ "$sse" -ge "$AIM" ]; then
+        if [ "$sse" -le "$AIM2" ]; then
+         #last tgz backup!
+        LASTF=`ls -1tr $DESTINATION/${BASENAME}*.tgz | tail -1`
+        echo NOW FULL DAILY BACKUP
+        OUTNAME=$DESTINATION/${BASENAME}`date +%Y%m%d_%H%M%S`.tgz
+        echo outname = $OUTNAME
+        sleep 2
+        tar -cvzf $OUTNAME ${NOTAR[*]}  ${ARR[*]} 
+        echo ______________________________________
+        ls -ltr $DESTINATION/${BASENAME}*.tgz | tail -2
+        echo ______________________________________
+        ls -l $OUTNAME
+        sleep $delta
+###########################################################
+        echo ..... check the difference to the last backup:
+        SIZENOW=`stat -c %s $OUTNAME`
+        SIZELAST=`stat -c %s $LASTF`
+        echo now=$SIZENOW $SIZELAST=last $LASTF
+        if [ "$SIZENOW" = "$SIZELAST" ]; then
+          echo I remove $LASTF
+          rm $LASTF
+        else
+          echo I do not remove $LASTF
+        fi
+##########################################################
+        fi 
+        fi      
+        sleep $delta
+        sec=`date +%H%M%S`
+        sse=`expr $sec + 0`
+        echo -n `expr $sse - $AIM + 40` " "
+done
+

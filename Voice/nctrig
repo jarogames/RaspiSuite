@@ -1,0 +1,126 @@
+#!/bin/bash
+#
+#  in raspberry there is a BIG CATCH!
+#USE:  screen -dmS name  bash script
+#su - pi -c "/usr/bin/screen -dmS nctrig bash /home/pi/nctrig"
+# redirect to jack   omxplayer  -o local
+
+
+#DIR=/home/pi/animals
+#echo goto $DIR
+#cd $DIR
+#pwd
+#echo in $DIR
+###amixer cset numid=1    ===local, 3hdmi
+############### I RUN SELFTEST EVERY 5 minutes ##########
+
+amixer cset numid=1
+amixer sset PCM 100%
+
+# (watch -n 500 'killall omxplayer.bin;echo test | nc localhost 5678 2>1 >/dev/null'  2>1 >/dev/null&)
+  (watch -n 500 'killall mpg321;echo test | nc localhost 5678 2>1 >/dev/null'  2>1 >/dev/null&)
+
+PIDW=$!
+#jobs -l
+echo background watch has pid=$PIDW
+echo "ps -ef | grep $PIDW"
+
+
+
+# echo listening for a tag: animals,chants,test
+# echo _______________________________________
+ echo -n `date`
+ echo -n  /$tag/
+
+
+
+while [ 1 = 1 ]; do
+
+ # I display every hour a mark
+ H=`date +%H`
+ if [ "$H" = 6 ]; then
+   amixer -q sset PCM 88%
+ fi
+ if [ "$H" = 7 ]; then
+   amixer -q sset PCM 92%
+ fi
+ if [ "$H" = 8 ]; then
+   amixer -q sset PCM 97%
+ fi
+ if [ "$H" = 21 ]; then
+   amixer -q sset PCM 92%
+ fi
+ if [ "$H" = 22 ]; then
+   amixer -q sset PCM 89%
+ fi
+ if [ "$H" = 23 ]; then
+   amixer -q sset PCM 85%
+ fi
+if [ "$H" = 5 ]; then
+   amixer -q sset PCM 85%
+ fi
+
+
+tag=""
+while [ "$tag" = "" ]; do
+# (sleep 101;killall nc &)
+ echo -n ,
+ tag1=`nc  -l -p 5678`
+ tag=`echo -n $tag1`
+done
+
+
+### TAG ################
+	 DIRA=$HOME/nctrig_$tag
+         if  [ "$tag" = "clock" ]; then
+                echo -n "c"
+		h=`date +%H`
+		m=`date +%M`
+		amixer -q sset PCM 85%
+		mpg321 -q  $DIRA/${h}_${m}.mp3 2>>   $HOME/nctrig_test.log
+		amixer -q sset PCM 99%
+		tag=test
+	 fi
+	 if  [ "$tag" = "test" ]; then
+#             echo -n .
+		if [ $H != `date +%H` ]; then
+		echo -n `date +%d`/$H:0
+		fi
+             echo `date +%Y%m%d_%H%M%S` >> $HOME/nctrig_test.log
+             #echo "ok", ` df -h` >> $HOME/nctrig_test.log
+#             mpg321 -q  $DIRA/${h}_${m}.mp3  2>> $HOME/nctrig_test.log
+
+        else
+  	if [ -d $DIRA ]; then
+#	 echo _______________________________________
+	 echo -n `date`
+	 echo -n \{$tag\}
+
+	 	 echo -n \[$DIRA\]
+		 ls -1 $DIRA | grep "\.mp3$" | wc -l > $DIRA/LINES
+		 LI=`cat $DIRA/LINES`
+		 LJ=`cat $DIRA/LINES_NOW`
+		 LJ=$(( $LJ + 1 ))
+		 if [ $LJ -ge $LI ]; then 
+		     LJ=1
+		 fi
+		 echo -n  \#$LJ/$LI#
+		 echo $LJ >  $DIRA/LINES_NOW
+		 WHAT=`ls -1 $DIRA | grep "\.mp3$" | head -$LJ | tail -1`
+	 	 echo  \[$DIRA/$WHAT\]
+
+#	 	 omxplayer -o local  $DIRA/$WHAT  2 > /dev/null &
+#                 sleep 5
+#                 killall -9 omxplayer.bin
+	 	 mpg321 -q  $DIRA/$WHAT >> $HOME/nctrig_test.log 
+                 echo -n X
+	else
+	echo $DIRA does not exist
+	fi
+	fi
+
+# fi  ################## f
+# done  # for i
+done
+
+

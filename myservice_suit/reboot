@@ -1,0 +1,31 @@
+#!/bin/bash
+
+echo searching  Unknown PCM in nctrig log 1
+sleep 1 
+echo searching  Unknown PCM in nctrig log 1
+sleep 1 
+echo searching  Unknown PCM in nctrig log 1
+sleep 1 
+echo searching  Unknown PCM in nctrig log 1
+sleep 1 
+tail $HOME/nctrig_test.log | grep "Unknown PCM"
+if [ "$?" = 0 ]; then 
+	exho deletnig  $HOME/nctrig_test.log 
+	rm $HOME/nctrig_test.log 
+  i=15
+  while (( $i >0 )); do
+  echo going to reboot  in $i seconds ... unknown string PCM | wall
+  sleep 1
+  i=$(( $i - 1 ))
+  if (( $i <= 0 )); then 
+	
+	rm $HOME/nctrig_test.log
+	echo REBOOT ... unknown string in log 1;
+	sudo reboot;
+	fi
+  done
+else
+echo no problem ... end in 10 seconds
+sleep 10
+fi
+

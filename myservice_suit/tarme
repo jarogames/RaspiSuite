@@ -1,0 +1,56 @@
+#!/bin/bash
+################ go to full minute
+sec=`date +%H%M%S`
+sse=`expr $sec + 0`
+AIM=75100
+
+if [ "$1" != "" ]; then
+ AIM=$1
+fi
+delta=5
+AIM2=`expr $AIM + $delta` 
+echo i get $sse and compare to $AIM
+
+DESTINATION=$HOME/syncthing/
+mkdir -p $DESTINATION
+BASENAME="myservice_${HOSTNAME}_"
+
+while [ 1 ]; do
+        if [ "$sse" -ge "$AIM" ]; then
+        if [ "$sse" -le "$AIM2" ]; then
+        echo NOW
+	LASTF=`ls -1tr ${DESTINATION}/${BASENAME}*.tgz | tail -1`
+        cd $HOME/.myservice/
+        OUTNAME=$DESTINATION/${BASENAME}`date +%Y%m%d_%H%M%S`.tgz
+        echo outname = $OUTNAME
+        sleep 2
+        tar -cvzf $OUTNAME  *
+ 	echo ______________________________________
+	ls -ltr $DESTINATION/${BASENAME}*.tgz | tail -2
+	echo ______________________________________
+        ls -l $OUTNAME
+        sleep $delta
+###########################################################
+	echo ..... check the difference to the last backup:
+	SIZENOW=`stat -c %s $OUTNAME`
+	SIZELAST=`stat -c %s $LASTF`
+	echo now=$SIZENOW $SIZELAST=last $LASTF
+	if [ "$SIZENOW" = "$SIZELAST" ]; then
+	  echo I remove $LASTF
+          rm $LASTF
+	else
+	  echo I do not remove $LASTF
+#	  cp $LASTF $HOME/test/
+	fi
+##########################################################
+        fi
+        fi      
+        sleep $delta
+        sec=`date +%H%M%S`
+        sse=`expr $sec + 0`
+        echo -n `expr $sse - $AIM + 40` " "
+done
+
+
+exit 0
+
