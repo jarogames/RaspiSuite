@@ -1,4 +1,5 @@
- #Prepare HDMI autotart and resolution  in /boot/config.txt
+Prepare HDMI autotart and resolution  in /boot/config.txt
+-------------------------------------------------
 
 
 see: https://www.raspberrypi.org/documentation/configuration/config-txt.md
@@ -7,6 +8,7 @@ This shows current setting:
 ```
 vcgencmd get_config int
 ```
+
 This worked for me - 1024x768
 ```
 hdmi_force_hotplug=1
@@ -15,7 +17,7 @@ hdmi_mode=16
 ```
 
 ```
-# hdmi_safe .... will propagate 640x480 etc...
+# hdmi_safe .... uncommenting will CAUSE 640x480 etc...
 # Force the monitor to HDMI mode so that sound will be sent over HDMI cable
 hdmi_force_hotplug=1
 
@@ -31,11 +33,9 @@ hdmi_mode=0x10
 #overscan_bottom=10
 ```
 
-2/0x10 ... 1024,  
+remark ... 2/0x10 ... try for 1024x768
 
-```tvservice -s```
-
-will tell current mode
+`tvservice -s` will tell current mode
 
 
 https://www.raspberrypi.org/forums/viewtopic.php?t=5851
@@ -45,7 +45,8 @@ https://www.raspberrypi.org/forums/viewtopic.php?t=5851
 2. Run “tvservice –m DMT” to give a list of DMT supported modes.
 ```
 
-# Locale and others
+ Locale and others
+---------------------
 
 1/ Locale  en_US.UTF8
 
@@ -59,7 +60,7 @@ https://www.raspberrypi.org/forums/viewtopic.php?t=5851
 
 6/ hostname
 
-# reboot
+**reboot**
 
 1/ wifi signal
 
@@ -73,12 +74,17 @@ https://www.raspberrypi.org/forums/viewtopic.php?t=5851
 
 4/ aptitude install mc htop git screen sqlite3 mysql-client nc
 
-# Install phidgets code from git
+
+ Install phidgets code from git
+----------------------------------
 
 
 
 
-# Better streaming solution from linuxjournal http://www.linuxjournal.com/content/better-raspberry-pi-streaming-solution
+ Better streaming solution from linuxjournal 
+ --------------------------------------------
+ http://www.linuxjournal.com/content/better-raspberry-pi-streaming-solution
+ 
 
 add to /etc/apt/sources.list
 ```
@@ -104,19 +110,23 @@ to run try this
 ```
 /usr/bin/uv4l -nopreview --auto-video_nr --driver raspicam --encoding jpeg --quality 90 --metering matrix --drc low --width 1280 --height 720 --framerate 10 --server-option '--port=8080' --server-option '--max-queued-connections=10' --server-option '--max-streams=5' --server-option '--max-threads=15'
 ```
+These things make uv4l runnig from start. Not very clear now....
+
+
 
 PYTHON
 -----------
-
+```
 pyserial
 numpy
 pandas
 staticmap
 pathos
 http.server
-## after reboot
+#  after reboot
 pandas
 sensehat
+```
 
 
 WIFI
@@ -129,5 +139,14 @@ inform 192.168.0.17
 static routers=192.168.0.1
 static domain_name_servers=8.8.8.8
 ```
-pix2=16
-pix3=17
+What pi's?
+```
+pim  10 mobile
+pi   11 old dead
+pi4  12 
+pi3  13 vrata
+pib  14 gar
+pix1 15 ?
+pix2 16 new pi - sounds, hat
+pix3 17 hat and reserve for organ
+```
