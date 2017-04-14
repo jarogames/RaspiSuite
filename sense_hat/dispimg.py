@@ -5,34 +5,31 @@ import time
 from PIL import Image
 import os
 import sys
-
+import urllib.request
+import io  # create file like object with jpg
 
 if len(sys.argv)>1:
     imax=int(sys.argv[1])
 else:
     imax=20
 
+    
 for i in range(imax):
+    start_time=time.time()
     print("!... TAKING PHOTO RIGHT NOW", i,'/',imax)
-    CMD='wget http://localhost:8088/\?action\=snapshot -O pic.jpg 2>/dev/null'
-    a=os.popen(CMD)
-    time.sleep(1)  # need some time to save to SD
-    image_file="pic.jpg"
-    print("!... PHOTO TAKEN, openning ...",image_file,'...')
-    #CMD="/usr/bin/convert  pic.jpg -resize 8x8! pic64.jpg"
-    #print('i... trying to convert')
-    #os.popen(CMD)
-    #time.sleep(1)
-    #########################
-    # Open image file
-    #image_file = os.path.join(os.sep,"/home","pi","SenseHAT","pixelart.png")
-    #image_file=sys.argv[1]
-    #print('i... opening', image_file)
-
-    img = Image.open(image_file)
+    req=urllib.request.Request("http://localhost:8088/?action=snapshot")
+    with urllib.request.urlopen(req) as url:
+        f=io.BytesIO( url.read() )
+    
+    print("!... PHOTO TAKEN, openning ...")
+    img = Image.open( f )
     print('i... opened, resizing ...')
-    ###img=img.thumbnail( (8,8) , Image.ANTIALIAS )
-    img=img.resize(  (8,8)  , Image.ANTIALIAS )
+
+#    img=img.resize(  (8,8)  , Image.NEAREST )
+    img=img.resize(  (8,8)  , Image.BILINEAR )
+#    img=img.resize(  (8,8)  , Image.BICUBIC )
+#    img=img.resize(  (8,8)  , Image.ANTIALIAS )
+
     # Generate rgb values for image pixels
     rgb_img = img.convert('RGB')
     image_pixels = list(rgb_img.getdata())
@@ -46,11 +43,18 @@ for i in range(imax):
         sense_pixels.extend( image_pixels[start_pixel:(start_pixel+image_width):pixel_width] )
         start_pixel += (image_width*pixel_width)
 
+    #---- recalculate to have floor 10 96% or 20, 92%
+#    sense_pixels=[ tuple([ int(a*0.96+10) for a in x])  for x in sense_pixels ]
+    #print( sense_pixels )
+    #time.sleep(3)
     # Display the image
     sense = SenseHat()
     sense.set_rotation(r=180)
     sense.set_pixels(sense_pixels)
-    time.sleep (3)
+    print('m...                 {:.2f}sec.'.format( time.time()-start_time ))
+    time.sleep (0.1)
     print('i... next',i)
 ########### end of for
+print("e...  ending....")
+time.sleep(1)
 sense.clear()
