@@ -23,7 +23,7 @@ for i in range(imax):
     
     print("!... PHOTO TAKEN, openning ...")
     img = Image.open( f )
-    print('i... opened, resizing ...')
+    print('i... opened, resizing ...', end="")
 
 #    img=img.resize(  (8,8)  , Image.NEAREST )
     img=img.resize(  (8,8)  , Image.BILINEAR )
@@ -53,7 +53,7 @@ for i in range(imax):
     sense.set_pixels(sense_pixels)
     print('m...                 {:.2f}sec.'.format( time.time()-start_time ))
     time.sleep (0.1)
-    print('i... next',i)
+    #print('i... next',i)
 ########### end of for
 print("e...  ending....")
 time.sleep(1)
