@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
-from sense_emu import SenseHat
+#from sense_emu import SenseHat
+from sense_hat import SenseHat
+
 from signal import pause
 import time
 from datetime import datetime
@@ -23,8 +25,8 @@ def getstamp():
 
 def take_photo():
     try:
-        req=urllib.request.Request('http://pix3:8088/?action=snapshot')
-        #req=urllib.request.Request("http://localhost:8088/?action=snapshot")
+        #req=urllib.request.Request('http://pix3:8088/?action=snapshot')
+        req=urllib.request.Request("http://localhost:8088/?action=snapshot")
         with urllib.request.urlopen(req) as url:
             f=io.BytesIO( url.read() )
     except:
