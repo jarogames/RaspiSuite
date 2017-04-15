@@ -44,10 +44,10 @@ def label_photo(img, stamp):
     draw.text((0, 0), stamp ,(255,255,255))
     return img
 
-def photo_on_matrix( f ):
-    img = Image.open( f )
-    img=img.resize(  (8,8)  , Image.BILINEAR )
-    rgb_img = img.convert('RGB')
+def photo_on_matrix( img ):
+    #img = Image.open( f )
+    img2=img.resize(  (8,8)  , Image.BILINEAR )
+    rgb_img = img2.convert('RGB')
     image_pixels = list(rgb_img.getdata())
     # Get the 64 pixels you need
     pixel_width = 1
@@ -76,7 +76,7 @@ def save_image(fname, joyraw=1 ):
     img=Image.open(f)
     if joyraw==3:
         print('D... updating matrix')
-        photo_on_matrix(f)
+        photo_on_matrix( img )
     label_photo( img, fname )
     #img.show()
     print('s... saving', directory+fname+'.jpg')
@@ -143,7 +143,7 @@ def update_screen(event):
     if joymenu['row']==3: # show camera picture
         #hat.set_pixel(x, y, 255, 255, 255)
         f=take_photo()
-        photo_on_matrix( f )
+        photo_on_matrix( Image.open(f) )
         return
         
 
