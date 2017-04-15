@@ -17,6 +17,12 @@ from PIL import ImageFont
 from PIL import ImageDraw 
 
 
+x = y = 1
+hat = SenseHat()
+joymenu={'row':1, 'pos':1}
+
+
+
 def getstamp():
     now=datetime.now()
     stamp="{:4d}{:02d}{:02d}_{:02d}{:02d}{:02d}_{:01d}".format(now.year,now.month,now.day,now.hour,now.minute,now.second,int(now.microsecond/1e+5))
@@ -66,7 +72,7 @@ def photo_on_matrix( img ):
 
 
 
-    
+# if fname == ""    : no file save
 def save_image(fname, joyraw=1 ):
     home = expanduser("~")
     directory=home+'/'+'motion/'
@@ -77,6 +83,8 @@ def save_image(fname, joyraw=1 ):
     if joyraw==3:
         print('D... updating matrix')
         photo_on_matrix( img )
+    if fname == "":
+        return
     label_photo( img, fname )
     #img.show()
     print('s... saving', directory+fname+'.jpg')
@@ -84,10 +92,6 @@ def save_image(fname, joyraw=1 ):
     img.close()
     return 0
 
-
-x = y = 1
-hat = SenseHat()
-joymenu={'row':1, 'pos':1}
 
 
 
@@ -135,10 +139,10 @@ def update_screen(event):
     hat.clear()
     if joymenu['row']==1:  #silent
         #hat.set_pixel(x, y, 0, 0, 100)
-        show_number( joymenu['pos'],0,0,130 )
+        show_number( joymenu['pos'],0,0,50 )
         return
     if joymenu['row']==2: # number selection
-        show_number( joymenu['pos'],250,250,250 )
+        show_number( joymenu['pos'],210,210,210 )
         
     if joymenu['row']==3: # show camera picture
         #hat.set_pixel(x, y, 255, 255, 255)
@@ -149,7 +153,7 @@ def update_screen(event):
 
 def clampy(value, min_value=1, max_value=3):
     return min(max_value, max(min_value, value))
-def clampx(value, min_value=1, max_value=5):
+def clampx(value, min_value=0, max_value=3):
     return min(max_value, max(min_value, value))
 
 def move_dot(event):
@@ -185,10 +189,13 @@ for i in range(987654321):
     tdelta = time.time() - start_time
     print(i,  joymenu , "{:.1f}".format( tdelta )    )
     if joymenu['row'] in (1,2,3):
+        #                ==0:  nothing happens
+        if joymenu['pos']==0:
+            save_image( ""  ,  joymenu['row'] )  # 3 means matrix
         if joymenu['pos']==1 and tdelta>100:
             start_time=time.time()
             print('A... ',tdelta)
-            save_image( getstamp() ,  joymenu['row'] )
+            save_image( getstamp() ,  joymenu['row'] )  # 3 means matrix
             
         if joymenu['pos']==2 and tdelta>10:
             start_time=time.time()
