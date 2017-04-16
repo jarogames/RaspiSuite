@@ -30,7 +30,7 @@ hat = SenseHat()
 joymenu={ 'row':1, 'pos':1,  'res':1, 'speed':1 }
 joymenulow={ 'row':0, 'pos':1,  'res':1, 'speed':0 }
 joymenuhig={ 'row':3, 'pos':1,  'res':3, 'speed':3 }
-joyspeed={1:100, 2:10, 3:1 }
+joyspeed={0:99999, 1:100, 2:10, 3:1 }
 tdeltamax=joyspeed[ joymenu[ 'speed' ] ]
 tdelta=tdeltamax      # global delta time
 
@@ -78,7 +78,7 @@ def photo_on_matrix( img ):
         sense_pixels.extend( image_pixels[start_pixel:(start_pixel+image_width):pixel_width] )
         start_pixel += (image_width*pixel_width)
     #hat.set_rotation(r=180)
-    print('i... photo sent to matrix, pixels=',len(sense_pixels))
+    #print('i... photo sent to matrix, pixels=',len(sense_pixels))
     hat.set_pixels(sense_pixels)
     #time.sleep(1)
     #hat.set_rotation(r=0)
@@ -95,7 +95,7 @@ def save_image(fname, joyraw=1 ):
     f=take_photo()
     img=Image.open(f)
     if joyraw==3:
-        print('D... updating matrix')
+        #print('D... updating matrix')
         photo_on_matrix( img )
     if fname == "":
         return
@@ -134,6 +134,8 @@ def show_num(val,xd,yd,r,g,b):
             
 def show_number(val,r,g,b):
     abs_val = abs(val)
+    if abs(val)>99:
+        return
     tens = abs_val // 10
     units = abs_val % 10
     hat.clear()
@@ -293,10 +295,11 @@ for i in range(987654321):
                 
     if joymenu['row'] in (3,):
         if tdeltamax-tdelta>1: # show 4 all times > 1
-            time.sleep(0.5)
-            show_number( int(tdeltamax-tdelta), 0 , white , 0 )
+            if joymenu['speed']!=0:
+                time.sleep(0.5)
+                show_number( int(tdeltamax-tdelta), 0 , white , 0 )
         if tdelta<2:
-            time.sleep(0.5)
+            if joymenu['speed']!=0: time.sleep(0.5)
             
             
             
