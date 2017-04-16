@@ -24,11 +24,15 @@ from PIL import ImageFont
 from PIL import ImageDraw 
 
 
+
 x = y = 1
 hat = SenseHat()
 joymenu={ 'row':1, 'pos':1,  'res':1, 'speed':1 }
 joymenulow={ 'row':0, 'pos':1,  'res':1, 'speed':0 }
 joymenuhig={ 'row':3, 'pos':1,  'res':3, 'speed':3 }
+joyspeed={1:100, 2:10, 3:1 }
+tdeltamax=joyspeed[ joymenu[ 'speed' ] ]
+tdelta=tdeltamax      # global delta time
 
 
 
@@ -255,7 +259,9 @@ start_time=time.time()
 for i in range(987654321):
     time.sleep(0.2)
     tdelta = time.time() - start_time
-    print(i,  joymenu , "{:.1f}".format( tdelta ) , end="\r"   )
+    tdeltamax=joyspeed[ joymenu[ 'speed' ] ]
+
+    print( joymenu , "{:.1f} / {:.1f}   ".format( tdelta, tdeltamax ) , end="\r"   )
     
 #    if joymenu['row'] in (0,):
 #        print('red')
@@ -263,20 +269,34 @@ for i in range(987654321):
         #                ==0:  nothing happens
         if joymenu['speed']==0:
             save_image( ""  ,  joymenu['row'] )  # 3 means matrix
-        if joymenu['speed']==1 and tdelta>100:
-            start_time=time.time()
-            print('A... ',tdelta)
-            save_image( getstamp() ,  joymenu['row'] )  # 3 means matrix
+
+
             
-        if joymenu['speed']==2 and tdelta>10:
-            start_time=time.time()
-            print('A... ',tdelta)
-            save_image( getstamp()  ,  joymenu['row']  )
+        if joymenu['speed']==1:
+            if tdelta>tdeltamax:
+                start_time=time.time()
+                print('A... ',tdelta)
+                save_image( getstamp() ,  joymenu['row'] )  # 3 to mtx
+            
+        if joymenu['speed']==2:
+            if tdelta>tdeltamax:
+                start_time=time.time()
+                print('A... ',tdelta)
+                save_image( getstamp()  ,  joymenu['row']  )
            
         if joymenu['speed']==3 and tdelta>1:
-            start_time=time.time()
-            print('A... ',tdelta)
-            save_image( getstamp()  ,  joymenu['row']  )
+            if tdelta>tdeltamax:
+                start_time=time.time()
+                print('A... ',tdelta)
+                save_image( getstamp()  ,  joymenu['row']  )
+
+                
+    if joymenu['row'] in (3,):
+        if tdeltamax-tdelta>1: # show 4 all times > 1
+            time.sleep(0.5)
+            show_number( int(tdeltamax-tdelta), 0 , white , 0 )
+        if tdelta<2:
+            time.sleep(0.5)
             
             
             
