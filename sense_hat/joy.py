@@ -1,8 +1,15 @@
 #!/usr/bin/python3
 
-#from sense_emu import SenseHat
-from sense_hat import SenseHat
+try:
+    from sense_hat import SenseHat
+    blue=50
+    white=210
+except:
+    from sense_emu import SenseHat
+    blue=200
+    white=250
 
+    
 from signal import pause
 import time
 from datetime import datetime
@@ -19,7 +26,9 @@ from PIL import ImageDraw
 
 x = y = 1
 hat = SenseHat()
-joymenu={'row':1, 'pos':1}
+joymenu={ 'row':1, 'pos':1,  'res':1, 'speed':1 }
+joymenulow={ 'row':0, 'pos':1,  'res':1, 'speed':0 }
+joymenuhig={ 'row':3, 'pos':1,  'res':3, 'speed':3 }
 
 
 
@@ -36,7 +45,7 @@ def take_photo():
         with urllib.request.urlopen(req) as url:
             f=io.BytesIO( url.read() )
     except:
-        print('!... not image from camera')
+        print('!... not image from camera', end="\r" )
         f="pic.png"
         f="letters/A.png"
     return f
@@ -49,6 +58,7 @@ def label_photo(img, stamp):
     # draw.text((x, y),"Sample Text",(r,g,b))
     draw.text((0, 0), stamp ,(255,255,255))
     return img
+
 
 def photo_on_matrix( img ):
     #img = Image.open( f )
@@ -116,70 +126,121 @@ def show_num(val,xd,yd,r,g,b):
             xt = p % 3
             yt = (p-offset) // 3
             hat.set_pixel(xt+xd,yt+yd,r,g,b)       
-    
+
+            
 def show_number(val,r,g,b):
     abs_val = abs(val)
     tens = abs_val // 10
     units = abs_val % 10
     hat.clear()
-    if (abs_val > 9): show_num(tens,0,2,r,g,b)
+    if (abs_val > 9): show_num(tens,0,2,  r,g,b )
     show_num(units,4,2,r,g,b)
     if abs_val == 100:
         hat.clear()
-        show_num(10,3,2,r,g,b) # 'T' for ton = 100
+        show_num(10,3,2,  r,g,b ) # 'T' for ton = 100
     if val < 0 :
         for i in range(0,8):
             hat.set_pixel(i,0,0,0,128)
 
 
+            
 def update_screen(event):
     if event is None:
-        print('i... initial U.S.')
+        print('i... initial update screen')
     else:
         if not event.action in ('pressed', 'held'):
             return
     #print('D... update scr')
     hat.clear()
-    if joymenu['row']==0:  #resolution  red
-        #hat.set_pixel(x, y, 0, 0, 100)
-        show_number( 9 ,210,0,0 )
+    if joymenu['row']==0:  # red - resolution
+        #show_number( joymenu['res'], 230 ,0, 0  )
+        if joymenu['res']==1: hat.show_letter('S', (240,0,0) )
+        if joymenu['res']==2: hat.show_letter('M', (240,0,0) )
+        if joymenu['res']==3: hat.show_letter('L', (240,0,0) )
+        if joymenu['res']==4: hat.show_letter('X', (240,0,0) )
         return
-    if joymenu['row']==1:  #silent  blue
+    if joymenu['row']==1:  #silent
         #hat.set_pixel(x, y, 0, 0, 100)
-        show_number( joymenu['pos'],0,0,50 )
+        show_number( joymenu['speed'],0,0,blue )
         return
-    if joymenu['row']==2: # number selection white
-        show_number( joymenu['pos'],210,210,210 )
+    if joymenu['row']==2: # number selection
+        show_number( joymenu['speed'], white , white , white )
         
     if joymenu['row']==3: # show camera picture
         #hat.set_pixel(x, y, 255, 255, 255)
         f=take_photo()
         photo_on_matrix( Image.open(f) )
         return
-        
 
-def clampy(value, min_value=0, max_value=3):  # 0 --- set resolution red; 1,2 - blue,white;
+    
+
+def clampy(value, min_value=0, max_value=3):
     return min(max_value, max(min_value, value))
 def clampx(value, min_value=0, max_value=3):
     return min(max_value, max(min_value, value))
+
+
+def clamp(n, minn, maxn): return min(max(n, minn), maxn)
+
 
 def move_dot(event):
     global x, y
     global joymenu
     if event.action in ('pressed', 'held'):
-        x = clampx(x + {
-            'left': -1,
-            'right': 1,
-            }.get(event.direction, 0))
-        y = clampy(y - {
+        
+        if joymenu['row']==0: # ---------------------- red  - resolution
+            joymenu['res'] = joymenu['res'] + {
+                'left': -1,
+                'right': 1,
+                }.get(event.direction, 0)
+            joymenu['res']=clamp(joymenu['res'],joymenulow['res'],joymenuhig['res'] )
+            #
+            ##########  this is a place we need to make the action ######
+            #      1/ write to file
+            home = expanduser("~")
+            camfile=home+'/'+'.camson.rpires'
+            with open( camfile , 'w' ) as f:
+                if joymenu['res']==1:
+                    f.write('640\n')
+                if joymenu['res']==2:
+                    f.write('1024\n')
+                if joymenu['res']==3:
+                    f.write('1280\n')
+            if event.direction == 'middle':
+                CMD='screen -X -S picam quit'
+                print('!... killing picam',CMD)
+                os.popen( CMD )
+                
+        if joymenu['row']==1: # ---------------------------- blue
+            joymenu['speed'] = joymenu['speed'] + {
+                'left': -1,
+                'right': 1,
+                }.get(event.direction, 0)
+            joymenu['speed']=clamp(joymenu['speed'],joymenulow['speed'],joymenuhig['speed'] )
+            if event.direction == 'middle':
+                save_image( getstamp()  )
+        if joymenu['row']==2: # -------------------------   white
+            joymenu['speed'] = joymenu['speed'] + {
+                'left': -1,
+                'right': 1,
+                }.get(event.direction, 0)
+            joymenu['speed']=clamp(joymenu['speed'],joymenulow['speed'],joymenuhig['speed'] )
+            if event.direction == 'middle':
+                save_image( getstamp()  )
+        if joymenu['row']==3: # -------------------------- pic - do nothing
+            print("", end="\r")
+#            joymenu['res'] = joymenu['res'] + {
+#                'left': -1,
+#                'right': 1,
+#                }.get(event.direction, 0)
+            if event.direction == 'middle':
+                save_image( getstamp()  )
+        joymenu['row'] = joymenu['row'] - {
             'up': -1,
             'down': 1,
-            }.get(event.direction, 0))
-        joymenu['row']=y
-        joymenu['pos']=x
+            }.get(event.direction, 0)
+        joymenu['row']=clamp(joymenu['row'],joymenulow['row'],joymenuhig['row'] )
         print(joymenu)
-        if event.direction == 'middle':
-            save_image( getstamp()  )
 
 update_screen( None )
 hat.stick.direction_up = move_dot
@@ -194,26 +255,27 @@ start_time=time.time()
 for i in range(987654321):
     time.sleep(0.2)
     tdelta = time.time() - start_time
-    #print(i,  joymenu , "{:.1f}".format( tdelta )    )
-    if joymenu['row'] in (0,):
-        continue
+    print(i,  joymenu , "{:.1f}".format( tdelta ) , end="\r"   )
+    
+#    if joymenu['row'] in (0,):
+#        print('red')
     if joymenu['row'] in (1,2,3):
         #                ==0:  nothing happens
-        if joymenu['pos']==0:
+        if joymenu['speed']==0:
             save_image( ""  ,  joymenu['row'] )  # 3 means matrix
-        if joymenu['pos']==1 and tdelta>100:
+        if joymenu['speed']==1 and tdelta>100:
             start_time=time.time()
-            print('pos 1... ',tdelta)
+            print('A... ',tdelta)
             save_image( getstamp() ,  joymenu['row'] )  # 3 means matrix
             
-        if joymenu['pos']==2 and tdelta>10:
+        if joymenu['speed']==2 and tdelta>10:
             start_time=time.time()
-            print('pos 2... ',tdelta)
+            print('A... ',tdelta)
             save_image( getstamp()  ,  joymenu['row']  )
            
-        if joymenu['pos']==3 and tdelta>1:
+        if joymenu['speed']==3 and tdelta>1:
             start_time=time.time()
-            print('pos 3... ',tdelta)
+            print('A... ',tdelta)
             save_image( getstamp()  ,  joymenu['row']  )
             
             
