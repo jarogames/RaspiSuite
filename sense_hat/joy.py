@@ -133,15 +133,22 @@ def show_number(val,r,g,b):
 
 
 def update_screen(event):
-    if not event.action in ('pressed', 'held'):
-        return
+    if event is None:
+        print('i... initial U.S.')
+    else:
+        if not event.action in ('pressed', 'held'):
+            return
     #print('D... update scr')
     hat.clear()
-    if joymenu['row']==1:  #silent
+    if joymenu['row']==0:  #resolution  red
+        #hat.set_pixel(x, y, 0, 0, 100)
+        show_number( 9 ,210,0,0 )
+        return
+    if joymenu['row']==1:  #silent  blue
         #hat.set_pixel(x, y, 0, 0, 100)
         show_number( joymenu['pos'],0,0,50 )
         return
-    if joymenu['row']==2: # number selection
+    if joymenu['row']==2: # number selection white
         show_number( joymenu['pos'],210,210,210 )
         
     if joymenu['row']==3: # show camera picture
@@ -151,7 +158,7 @@ def update_screen(event):
         return
         
 
-def clampy(value, min_value=1, max_value=3):
+def clampy(value, min_value=0, max_value=3):  # 0 --- set resolution red; 1,2 - blue,white;
     return min(max_value, max(min_value, value))
 def clampx(value, min_value=0, max_value=3):
     return min(max_value, max(min_value, value))
@@ -174,7 +181,7 @@ def move_dot(event):
         if event.direction == 'middle':
             save_image( getstamp()  )
 
-#update_screen()
+update_screen( None )
 hat.stick.direction_up = move_dot
 hat.stick.direction_down = move_dot
 hat.stick.direction_left = move_dot
@@ -187,24 +194,26 @@ start_time=time.time()
 for i in range(987654321):
     time.sleep(0.2)
     tdelta = time.time() - start_time
-    print(i,  joymenu , "{:.1f}".format( tdelta )    )
+    #print(i,  joymenu , "{:.1f}".format( tdelta )    )
+    if joymenu['row'] in (0,):
+        continue
     if joymenu['row'] in (1,2,3):
         #                ==0:  nothing happens
         if joymenu['pos']==0:
             save_image( ""  ,  joymenu['row'] )  # 3 means matrix
         if joymenu['pos']==1 and tdelta>100:
             start_time=time.time()
-            print('A... ',tdelta)
+            print('pos 1... ',tdelta)
             save_image( getstamp() ,  joymenu['row'] )  # 3 means matrix
             
         if joymenu['pos']==2 and tdelta>10:
             start_time=time.time()
-            print('A... ',tdelta)
+            print('pos 2... ',tdelta)
             save_image( getstamp()  ,  joymenu['row']  )
            
         if joymenu['pos']==3 and tdelta>1:
             start_time=time.time()
-            print('A... ',tdelta)
+            print('pos 3... ',tdelta)
             save_image( getstamp()  ,  joymenu['row']  )
             
             
