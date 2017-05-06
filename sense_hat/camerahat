@@ -19,20 +19,61 @@ import os
 from os.path import expanduser
 import io  # create file like object with jpg
 
+
+import pickle
+
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw 
 
 
 
+'''
+  THS IS AN ACTUAL MENU SYSTEM:
+  normal menu:   blue and white
+  low menu :    high menu :  PARAMETER LIMITS - min/max
+'''
 x = y = 1
 hat = SenseHat()
 joymenu={ 'row':1, 'pos':1,  'res':1, 'speed':1 }
-joymenulow={ 'row':0, 'pos':1,  'res':1, 'speed':0 }
+joymenulow={ 'row':0, 'pos':1,  'res':1, 'speed':-1 }
 joymenuhig={ 'row':3, 'pos':1,  'res':3, 'speed':3 }
-joyspeed={0:99999, 1:100, 2:10, 3:1 }
+joyspeed={-1:88888, 0:99999, 1:100, 2:10, 3:1 }
 tdeltamax=joyspeed[ joymenu[ 'speed' ] ]
 tdelta=tdeltamax      # global delta time
+
+
+
+
+
+
+def save_setting(joymenu):
+    """
+    Save into ~/.camerahat.save
+    """
+    home = expanduser("~")
+    with open(home+'/.camerahat.save', 'wb') as f:
+        print('s... saving setting')
+        pickle.dump([ joymenu ],     f)
+
+def restore_setting( joymenu ):
+    """
+    Restore position of the cross from ~/.camerahat.save
+    or return the default value in the midle
+    """
+    home = expanduser("~")
+    fname=home+'/.camerahat.save'
+    if os.path.isfile( fname ):
+        with open( fname , 'rb') as f: 
+            joymenu,=pickle.load( f)
+            print('i... restored', joymenu)
+    else:
+        print('i... no saved conf')
+    return joymenu
+
+
+
+
 
 
 
@@ -146,7 +187,7 @@ def show_number(val,r,g,b):
         show_num(10,3,2,  r,g,b ) # 'T' for ton = 100
     if val < 0 :
         for i in range(0,8):
-            hat.set_pixel(i,0,0,0,128)
+            hat.set_pixel(i,0,   r,g,b)
 
 
             
@@ -164,19 +205,18 @@ def update_screen(event):
         if joymenu['res']==2: hat.show_letter('M', (240,0,0) )
         if joymenu['res']==3: hat.show_letter('L', (240,0,0) )
         if joymenu['res']==4: hat.show_letter('X', (240,0,0) )
-        return
-    if joymenu['row']==1:  #silent
+
+    if joymenu['row']==1:  #silent blue
         #hat.set_pixel(x, y, 0, 0, 100)
         show_number( joymenu['speed'],0,0,blue )
-        return
-    if joymenu['row']==2: # number selection
+
+    if joymenu['row']==2: # white selction
         show_number( joymenu['speed'], white , white , white )
         
     if joymenu['row']==3: # show camera picture
         #hat.set_pixel(x, y, 255, 255, 255)
         f=take_photo()
         photo_on_matrix( Image.open(f) )
-        return
 
     
 
@@ -190,6 +230,9 @@ def clamp(n, minn, maxn): return min(max(n, minn), maxn)
 
 
 def move_dot(event):
+    '''
+    This is the main function - reaction to joystick movement.
+    '''
     global x, y
     global joymenu
     if event.action in ('pressed', 'held'):
@@ -247,8 +290,17 @@ def move_dot(event):
             }.get(event.direction, 0)
         joymenu['row']=clamp(joymenu['row'],joymenulow['row'],joymenuhig['row'] )
         print(joymenu)
+        save_setting(joymenu)
 
+############################################
+#####
+#
+#
+####
+############################################
 update_screen( None )
+joymenu=restore_setting( joymenu )
+
 hat.stick.direction_up = move_dot
 hat.stick.direction_down = move_dot
 hat.stick.direction_left = move_dot

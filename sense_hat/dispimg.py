@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 #from sense_hat import SenseHat
-from sense_hat import *
+try:
+    from sense_hat import *
+except:
+    from sense_emu import *
 import time
 from PIL import Image
 import os
@@ -17,12 +20,15 @@ else:
 for i in range(imax):
     start_time=time.time()
     print("!... TAKING PHOTO RIGHT NOW", i,'/',imax)
-    req=urllib.request.Request("http://localhost:8088/?action=snapshot")
-    with urllib.request.urlopen(req) as url:
-        f=io.BytesIO( url.read() )
-    
+    try:
+        req=urllib.request.Request("http://localhost:8088/?action=snapshot")
+        with urllib.request.urlopen(req) as url:
+            f=io.BytesIO( url.read() )
+        img = Image.open( f )
+    except:
+        img=Image.open('empty.jpg')
+        time.sleep(0.3)
     print("!... PHOTO TAKEN, openning ...")
-    img = Image.open( f )
     print('i... opened, resizing ...', end="")
 
 #    img=img.resize(  (8,8)  , Image.NEAREST )
