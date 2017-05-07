@@ -5,9 +5,14 @@
 import sys # arguments
 print( str(sys.argv) )
 
-from sense_hat import *
+try:
+    from sense_hat import *
+except:
+    from sense_emu import *
 import time
 import numpy as np
+
+import colorsys  # HSV PALLETE
 
 import subprocess
 
@@ -23,6 +28,17 @@ nums =[1,1,1,1,0,1,1,0,1,1,0,1,1,1,1, # 0
        1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,
        1,1,1,1,0,1,1,1,1,0,0,1,0,0,1, # 9
        1,1,1,0,1,0,0,1,0,0,1,0,0,1,0] # T
+
+
+def get_N_HexCol(N=5):
+    HSV_tuples = [(x*1.0/N, 1, 1) for x in range(N)]
+    hex_out = []
+    for rgb in HSV_tuples:
+        rgb = map(lambda x: int(x*255),colorsys.hsv_to_rgb(*rgb))
+        hex_out.append( list(rgb)  )
+    return hex_out
+
+
 
 def show_num(val,xd,yd,r,g,b):
     offset = val * 15
@@ -181,6 +197,13 @@ import os
 import datetime
 import time
 
+MAXTIME=600
+MAXCOLPAL=30
+
+allcol=get_N_HexCol( MAXCOLPAL )  # 30 colors per 10 minutes
+allcol[0]=[255,255,255]
+allcol[1]=[215,215,255]
+
 hat = SenseHat()
 selection = 'T'
 #if len(sys.argv)>1:
@@ -189,25 +212,33 @@ selection = 'T'
 #    numero=88
 for i in range(1):
     numero=check_output( "cat /tmp/TEMPOUT_ACTUAL".split() )
+    numero=numero.decode('utf').rstrip()
+    print( 'D... /'+numero+'/' , type(numero))
+    numero=  round( float(numero) )
+    print( 'D... ',numero )
     stat=os.stat('/tmp/TEMPOUT_ACTUAL')
     now=int( datetime.datetime.now().strftime('%s') )
     delta=now-stat.st_mtime
-    delta=delta/600
-    bdelta=0.0
-    if delta>1.0: 
-        bdelta=delta-1.0
-        if delta>2.0: bdelta=1.0
-        delta=1.0
-    print( now  - stat.st_mtime )
-    show_number( int(numero) , int( bdelta*250),  int( (1-delta)*250) ,int( delta*250 )  )
+    delta=delta/MAXTIME
+    delta=int(delta*MAXCOLPAL) 
+    if delta>=len(allcol): delta=len(allcol)-1
+#    bdelta=0.0
+#    if delta>1.0: 
+#        bdelta=delta-1.0
+#        if delta>2.0: bdelta=1.0
+#        delta=1.0
+#   r,g,b= int( bdelta*250),  int( (1-bdelta)*250) ,int( delta*250 )
+    r,g,b=allcol[  delta ]
+    print( now  - stat.st_mtime,   r,g,b )
+    show_number( int(numero) , r,g,b  )
     #display(hat, selection)
     #execute(hat,'T')
     #time.sleep(0.2)
     #execute(hat,'H')
     #time.sleep(0.2)
-    time.sleep(16)
+    time.sleep(17)
     hat.clear()
-    time.sleep(0.1)
+    #time.sleep(0.1)
 quit()
 ################################################# QUIT
 

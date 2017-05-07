@@ -9,7 +9,8 @@ except:
     blue=200
     white=250
 
-    
+import colorsys # HSV pallete
+  
 from signal import pause
 import time
 from datetime import datetime
@@ -45,6 +46,16 @@ tdelta=tdeltamax      # global delta time
 
 
 
+def get_N_HexCol(N=5):
+    '''
+    just create a pallete
+    '''
+    HSV_tuples = [(x*1.0/N, 0.5, 0.5) for x in range(N)]
+    hex_out = []
+    for rgb in HSV_tuples:
+        rgb = map(lambda x: int(x*255),colorsys.hsv_to_rgb(*rgb))
+        hex_out.append( list(rgb)  )
+    return hex_out
 
 
 def save_setting(joymenu):
