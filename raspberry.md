@@ -72,11 +72,55 @@ https://www.raspberrypi.org/forums/viewtopic.php?t=5851
 
 3/ aptitude -y upgrade
 
-4/ aptitude install mc htop git screen sqlite3 mysql-client nc
+4/ aptitude install mc htop git screen sqlite3 mysql-client
+
+# problem
+
+ `nc`
 
 
  Install phidgets code from git
 ----------------------------------
+
+MyAutomation
+---------------
+
+```
+git clone http://www.github.com/jaromrax/myservice
+git clone http://www.github.com/jaromrax/sqmylite
+
+```
+
+Mjpg-streaming
+-----------------
+
+
+mjpg-streamer compiles with cmake and needs libjpeg
+CAMSON20 needs `locate`
+```
+apitude install cmake  libjpeg-dev  locate
+```
+
+
+```
+git clone http://www.github.com/jaro/CAMSON
+git clone http://www.github.com/jaro/mjpg-streamer
+```
+
+### Instalation of the streamer
+
+Copy all to `~/bin/` directory, enter mpjg-str.., 
+
+Normaly - you should create dir `build`. BUT CAMSON20
+needs to `cmake .;make; make install` in a main dir. `make install sends `.so`
+to a proper place.
+
+`.in bashrc`  input 
+`LD_LIBRARY_PATH=/usr/local/lib/mjpg-streamer/:$LD_LIBRARY_PATH`
+
+
+
+
 
 
 
